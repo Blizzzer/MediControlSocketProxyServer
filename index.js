@@ -1,6 +1,7 @@
 var express = require('express');
 var socket = require('socket.io');
-const port = 3000;
+var clientIo = require('socket.io-client');
+const port = 4200;
 var app = express();
 
 var server = app.listen(port, () => {
@@ -9,14 +10,21 @@ var server = app.listen(port, () => {
 
 app.use(express.static('public'));
 
-var io = socket(server);    
-
+var io = socket(server);
+var clientSocket = clientIo.connect('http://localhost:3000');
+var currentData = [];
+var currentIds = [];
+var counter = 0;
 
 io.on('connection', (socket) => {
     console.log('Device number', socket.id, ' has successfully connected to the Medicontrol Server');
+    currentIds[counter] = socket.id;
+    counter++;
 
     socket.on('sending', function(data) {
-        console.log(JSON.stringify(data));
+        currentData[currentIds.indexOf(socket.id)] = data.data;
+        console.log(currentIds, currentData);
         socket.emit('sending', data);
+        clientSocket.emit('sending', data);
     });
 });
